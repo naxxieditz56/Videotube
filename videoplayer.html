@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VideoTube - Player</title>
+    <link rel="stylesheet" href="css/videoplayer.css">
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+    <script src="js/firebase-config.js"></script>
+</head>
+<body>
+    <header>
+        <div class="header-container">
+            <div class="logo">
+                <a href="index.html"><h1>VideoTube</h1></a>
+            </div>
+            <div class="search-bar">
+                <input type="text" id="search-input" placeholder="Search...">
+                <button id="search-btn">Search</button>
+            </div>
+            <div class="user-actions">
+                <a href="admin.html" class="admin-link">Admin</a>
+            </div>
+        </div>
+    </header>
+
+    <main>
+        <div class="player-container">
+            <div class="video-section">
+                <div class="video-player-container">
+                    <div id="ad-container" class="ad-container">
+                        <!-- Ad will be displayed here -->
+                    </div>
+                    <video id="video-player" controls>
+                        Your browser does not support the video tag.
+                    </video>
+                    <div class="video-controls">
+                        <button id="play-btn" class="control-btn">Play</button>
+                        <button id="fullscreen-btn" class="control-btn">Fullscreen</button>
+                    </div>
+                </div>
+                
+                <div class="video-info-section">
+                    <h1 id="video-title" class="video-title">Video Title</h1>
+                    <div class="video-stats">
+                        <div class="views-count">
+                            <span id="views-count">0 views</span>
+                        </div>
+                        <div class="interaction-buttons">
+                            <button id="like-btn" class="interaction-btn">
+                                <span class="like-icon">👍</span>
+                                <span id="like-count">0</span>
+                            </button>
+                            <button id="share-btn" class="interaction-btn">
+                                <span class="share-icon">📤</span>
+                                Share
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="recommendations-section">
+                <h2>Recommended Videos</h2>
+                <div id="recommendations-container" class="recommendations-container">
+                    <!-- Recommended videos will be loaded here -->
+                </div>
+                <button id="load-more-btn" class="load-more-btn">More</button>
+            </div>
+        </div>
+    </main>
+
+    <div id="share-modal" class="modal">
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Share Video</h2>
+            <p>Copy the link below to share this video:</p>
+            <input type="text" id="share-link" readonly>
+            <button id="copy-link-btn">Copy Link</button>
+        </div>
+    </div>
+
+    <script src="js/videoplayer.js"></script>
+</body>
+</html>
