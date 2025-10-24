@@ -104,20 +104,7 @@ document.getElementById('load-more-btn').addEventListener('click', () => {
     displayRecommendations();
 });
 
-// Play button functionality
-document.getElementById('play-btn').addEventListener('click', () => {
-    const videoPlayer = document.getElementById('video-player');
-    
-    // Show ad before playing video
-    showAd().then(() => {
-        // Increment view count
-        incrementViewCount();
-        
-        // Play video
-        videoPlayer.play();
-        document.getElementById('play-btn').textContent = 'Pause';
-    });
-});
+
 
 // Video player play/pause toggle
 document.getElementById('video-player').addEventListener('click', () => {
@@ -133,20 +120,7 @@ document.getElementById('video-player').addEventListener('click', () => {
     }
 });
 
-// Fullscreen functionality
-document.getElementById('fullscreen-btn').addEventListener('click', () => {
-    const videoPlayer = document.getElementById('video-player');
-    
-    if (videoPlayer.requestFullscreen) {
-        videoPlayer.requestFullscreen();
-    } else if (videoPlayer.mozRequestFullScreen) {
-        videoPlayer.mozRequestFullScreen();
-    } else if (videoPlayer.webkitRequestFullscreen) {
-        videoPlayer.webkitRequestFullscreen();
-    } else if (videoPlayer.msRequestFullscreen) {
-        videoPlayer.msRequestFullscreen();
-    }
-});
+
 
 // Like functionality
 document.getElementById('like-btn').addEventListener('click', () => {
