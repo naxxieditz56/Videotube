@@ -467,3 +467,17 @@ header {
         break-inside: avoid;
     }
 }
+/* Ad Container Styles */
+.banner-ad-container-bottom {
+    display: flex;
+    justify-content: center;
+    margin: 20px auto;
+    max-width: 300px;
+}
+
+.native-banner-ad-top {
+    margin: 20px auto;
+    max-width: 728px;
+    display: flex;
+    justify-content: center;
+}
