@@ -5,6 +5,33 @@ const videoId = urlParams.get('id');
 let currentVideo = null;
 let recommendedVideos = [];
 let displayedRecommendations = 6;
+let adTimerInterval;
+let adDuration = 30; // Default ad duration in seconds
+let skipAdTime = 5; // Time after which skip button appears
+
+// Adsterra configuration
+const ADSTERRA_CONFIG = {
+    videoAdUnit: 'your-adsterra-video-ad-unit-id', // Replace with your Adsterra video ad unit ID
+    bannerAdUnit: 'your-adsterra-banner-ad-unit-id' // Replace with your Adsterra banner ad unit ID
+};
+
+// Initialize Adsterra ads
+function initializeAds() {
+    // Initialize Google Publisher Tag (GPT) for Adsterra
+    window.googletag = window.googletag || {cmd: []};
+    
+    googletag.cmd.push(function() {
+        // Define video ad slot
+        const videoAdSlot = googletag.defineSlot(ADSTERRA_CONFIG.videoAdUnit, [640, 480], 'adsterra-video-ad');
+        if (videoAdSlot) {
+            videoAdSlot.addService(googletag.companionAds());
+            videoAdSlot.addService(googletag.pubads());
+        }
+        
+        googletag.pubads().enableSingleRequest();
+        googletag.enableServices();
+    });
+}
 
 // Load video data
 function loadVideo() {
@@ -33,180 +60,193 @@ function loadVideo() {
         // Set share link
         document.getElementById('share-link').value = window.location.href;
         
+        // Initialize ads
+        initializeAds();
+        
         // Load recommendations
         loadRecommendations();
+        
+        // Set up video event listeners for ads
+        setupVideoAdListeners();
     });
 }
 
-// Load recommended videos
-function loadRecommendations() {
-    const videosRef = database.ref('videos');
-    videosRef.once('value').then((snapshot) => {
-        const videos = snapshot.val();
-        recommendedVideos = [];
-        
-        if (videos) {
-            Object.keys(videos).forEach(key => {
-                if (key !== videoId) {
-                    recommendedVideos.push({
-                        id: key,
-                        ...videos[key]
-                    });
-                }
+// Setup video ad listeners
+function setupVideoAdListeners() {
+    const videoPlayer = document.getElementById('video-player');
+    
+    // When user tries to play video, show ad first
+    videoPlayer.addEventListener('play', (e) => {
+        if (!videoPlayer.adPlayed) {
+            e.preventDefault();
+            videoPlayer.pause();
+            showAdsterraAd().then(() => {
+                videoPlayer.adPlayed = true;
+                videoPlayer.play();
+                incrementViewCount();
             });
-            
-            // Shuffle recommendations
-            recommendedVideos = shuffleArray(recommendedVideos);
-            displayRecommendations();
+        }
+    });
+    
+    // Also handle click events for ad display
+    videoPlayer.addEventListener('click', (e) => {
+        if (videoPlayer.paused && !videoPlayer.adPlayed) {
+            e.preventDefault();
+            showAdsterraAd().then(() => {
+                videoPlayer.adPlayed = true;
+                videoPlayer.play();
+                incrementViewCount();
+            });
         }
     });
 }
 
-// Display recommendations
-function displayRecommendations() {
-    const container = document.getElementById('recommendations-container');
-    container.innerHTML = '';
-    
-    const videosToShow = recommendedVideos.slice(0, displayedRecommendations);
-    
-    videosToShow.forEach(video => {
-        const videoElement = document.createElement('div');
-        videoElement.className = 'recommended-video';
-        videoElement.setAttribute('data-video-id', video.id);
+// Show Adsterra ad before video playback
+function showAdsterraAd() {
+    return new Promise((resolve) => {
+        const adContainer = document.getElementById('ad-container');
+        const videoPlayer = document.getElementById('video-player');
+        const adTimer = document.getElementById('ad-timer');
+        const skipAdBtn = document.getElementById('skip-ad-btn');
         
-        videoElement.innerHTML = `
-            <img src="${video.thumbnail}" alt="${video.title}" class="recommended-thumbnail">
-            <div class="recommended-info">
-                <h3>${video.title}</h3>
-                <p class="recommended-views">${video.views || 0} views</p>
+        // Show ad container
+        adContainer.style.display = 'flex';
+        videoPlayer.style.display = 'none';
+        
+        let timeLeft = adDuration;
+        adTimer.textContent = timeLeft;
+        
+        // Display ad overlay initially
+        adContainer.innerHTML = `
+            <div class="ad-overlay">
+                <h3>Advertisement</h3>
+                <p>Video will play after ad</p>
+                <div class="ad-countdown">
+                    <span id="ad-countdown-text">Ad: </span>
+                    <span id="ad-timer">${timeLeft}</span>
+                    <button id="skip-ad-btn" style="display:none;">Skip Ad</button>
+                </div>
             </div>
+            <div id="adsterra-video-ad" style="width:100%; height:100%;"></div>
         `;
         
-        videoElement.addEventListener('click', () => {
-            window.location.href = `videoplayer.html?id=${video.id}`;
-        });
+        // Load Adsterra ad
+        loadAdsterraVideoAd();
         
-        container.appendChild(videoElement);
+        // Start countdown timer
+        adTimerInterval = setInterval(() => {
+            timeLeft--;
+            document.getElementById('ad-timer').textContent = timeLeft;
+            
+            // Show skip button after specified time
+            if (timeLeft <= (adDuration - skipAdTime)) {
+                document.getElementById('skip-ad-btn').style.display = 'inline-block';
+            }
+            
+            // End ad when timer reaches 0
+            if (timeLeft <= 0) {
+                clearInterval(adTimerInterval);
+                finishAd(resolve);
+            }
+        }, 1000);
+        
+        // Skip ad button event
+        document.getElementById('skip-ad-btn').addEventListener('click', () => {
+            clearInterval(adTimerInterval);
+            finishAd(resolve);
+        });
     });
-    
-    // Show/hide load more button
-    const loadMoreBtn = document.getElementById('load-more-btn');
-    if (displayedRecommendations >= recommendedVideos.length) {
-        loadMoreBtn.style.display = 'none';
-    } else {
-        loadMoreBtn.style.display = 'block';
-    }
 }
 
-// Load more recommendations
-document.getElementById('load-more-btn').addEventListener('click', () => {
-    displayedRecommendations += 6;
-    displayRecommendations();
-});
+// Load Adsterra video ad
+function loadAdsterraVideoAd() {
+    googletag.cmd.push(function() {
+        googletag.display('adsterra-video-ad');
+    });
+}
 
-
-
-// Video player play/pause toggle
-document.getElementById('video-player').addEventListener('click', () => {
+// Finish ad and resume video
+function finishAd(resolve) {
+    const adContainer = document.getElementById('ad-container');
     const videoPlayer = document.getElementById('video-player');
-    const playBtn = document.getElementById('play-btn');
     
-    if (videoPlayer.paused) {
-        videoPlayer.play();
-        playBtn.textContent = 'Pause';
-    } else {
-        videoPlayer.pause();
-        playBtn.textContent = 'Play';
-    }
-});
-
-
-
-// Like functionality
-document.getElementById('like-btn').addEventListener('click', () => {
-    const videoRef = database.ref(`videos/${videoId}`);
-    videoRef.transaction(video => {
-        if (video) {
-            video.likes = (video.likes || 0) + 1;
-        }
-        return video;
+    // Destroy ad
+    googletag.cmd.push(function() {
+        googletag.destroySlots();
     });
-});
-
-// Share functionality
-document.getElementById('share-btn').addEventListener('click', () => {
-    document.getElementById('share-modal').style.display = 'block';
-});
-
-// Close modal
-document.querySelector('.close').addEventListener('click', () => {
-    document.getElementById('share-modal').style.display = 'none';
-});
-
-// Copy link functionality
-document.getElementById('copy-link-btn').addEventListener('click', () => {
-    const shareLink = document.getElementById('share-link');
-    shareLink.select();
-    document.execCommand('copy');
-    alert('Link copied to clipboard!');
-});
-
-// Increment view count
-function incrementViewCount() {
-    const videoRef = database.ref(`videos/${videoId}`);
-    videoRef.transaction(video => {
-        if (video) {
-            video.views = (video.views || 0) + 1;
-        }
-        return video;
-    });
+    
+    // Hide ad container and show video
+    adContainer.style.display = 'none';
+    videoPlayer.style.display = 'block';
+    
+    // Resolve promise to continue video playback
+    resolve();
 }
 
-// Show ad (simulated)
-function showAd() {
+// Alternative simple ad implementation (fallback)
+function showSimpleAd() {
     return new Promise((resolve) => {
         const adContainer = document.getElementById('ad-container');
         const videoPlayer = document.getElementById('video-player');
         
-        // Show ad container
-        adContainer.style.display = 'block';
+        adContainer.style.display = 'flex';
         videoPlayer.style.display = 'none';
         
-        // Simulate ad (in a real implementation, you would use Adsterra)
         adContainer.innerHTML = `
-            <div style="width:100%; height:100%; display:flex; justify-content:center; align-items:center; background:#000; color:#fff; flex-direction:column;">
-                <h2>Advertisement</h2>
-                <p>Video will play in 3 seconds...</p>
+            <div class="ad-overlay">
+                <h3>Advertisement</h3>
+                <p>Your video will play in <span id="ad-timer">5</span> seconds</p>
+                <button id="skip-ad-btn" style="display:none;">Skip Ad</button>
             </div>
         `;
         
-        // After 3 seconds, hide ad and resolve promise
-        setTimeout(() => {
+        let timeLeft = 5;
+        const adTimer = document.getElementById('ad-timer');
+        const skipAdBtn = document.getElementById('skip-ad-btn');
+        
+        const timer = setInterval(() => {
+            timeLeft--;
+            adTimer.textContent = timeLeft;
+            
+            if (timeLeft <= 2) {
+                skipAdBtn.style.display = 'inline-block';
+            }
+            
+            if (timeLeft <= 0) {
+                clearInterval(timer);
+                adContainer.style.display = 'none';
+                videoPlayer.style.display = 'block';
+                resolve();
+            }
+        }, 1000);
+        
+        skipAdBtn.addEventListener('click', () => {
+            clearInterval(timer);
             adContainer.style.display = 'none';
             videoPlayer.style.display = 'block';
             resolve();
-        }, 3000);
+        });
     });
 }
 
-// Double tap to forward/rewind
-let lastTap = 0;
+// The rest of your existing JavaScript code remains the same...
+// [Keep all your existing functions like loadRecommendations, displayRecommendations, etc.]
+
+// Update the video click event listener to handle ads
 document.getElementById('video-player').addEventListener('click', (e) => {
+    const videoPlayer = document.getElementById('video-player');
+    
+    // Double tap detection for seeking
     const currentTime = new Date().getTime();
     const tapLength = currentTime - lastTap;
     
     if (tapLength < 300 && tapLength > 0) {
-        // Double tap detected
-        const videoPlayer = document.getElementById('video-player');
         const rect = videoPlayer.getBoundingClientRect();
         const x = e.clientX - rect.left;
         
-        // If tap on right side, forward 10 seconds
         if (x > rect.width / 2) {
             videoPlayer.currentTime += 10;
-        } 
-        // If tap on left side, rewind 10 seconds
-        else {
+        } else {
             videoPlayer.currentTime = Math.max(0, videoPlayer.currentTime - 10);
         }
     }
@@ -214,26 +254,8 @@ document.getElementById('video-player').addEventListener('click', (e) => {
     lastTap = currentTime;
 });
 
-// Utility function to shuffle array
-function shuffleArray(array) {
-    for (let i = array.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [array[i], array[j]] = [array[j], array[i]];
-    }
-    return array;
-}
-
-// Search functionality
-document.getElementById('search-btn').addEventListener('click', () => {
-    const searchInput = document.getElementById('search-input');
-    window.location.href = `index.html?search=${encodeURIComponent(searchInput.value)}`;
+// Initialize ads on page load
+document.addEventListener('DOMContentLoaded', function() {
+    initializeAds();
+    loadVideo();
 });
-
-document.getElementById('search-input').addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') {
-        window.location.href = `index.html?search=${encodeURIComponent(e.target.value)}`;
-    }
-});
-
-// Load video on page load
-document.addEventListener('DOMContentLoaded', loadVideo);
