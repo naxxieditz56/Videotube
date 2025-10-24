@@ -11,8 +11,8 @@ let skipAdTime = 5; // Time after which skip button appears
 
 // Adsterra configuration
 const ADSTERRA_CONFIG = {
-    videoAdUnit: '27818603', // Replace with your Adsterra video ad unit ID
-    bannerAdUnit: '27818639' // Replace with your Adsterra banner ad unit ID
+    videoAdUnit: 'your-adsterra-video-ad-unit-id', // Replace with your Adsterra video ad unit ID
+    bannerAdUnit: 'your-adsterra-banner-ad-unit-id' // Replace with your Adsterra banner ad unit ID
 };
 
 // Initialize Adsterra ads
