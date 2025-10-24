@@ -8,6 +8,7 @@ let displayedRecommendations = 6;
 let adTimerInterval;
 let adDuration = 30; // Default ad duration in seconds
 let skipAdTime = 5; // Time after which skip button appears
+let lastTap = 0;
 
 // Adsterra configuration
 const ADSTERRA_CONFIG = {
@@ -68,6 +69,12 @@ function loadVideo() {
         
         // Set up video event listeners for ads
         setupVideoAdListeners();
+        
+        // Set up interaction buttons
+        setupInteractionButtons();
+        
+        // Set up modal functionality
+        setupModal();
     });
 }
 
@@ -84,7 +91,10 @@ function setupVideoAdListeners() {
                 videoPlayer.adPlayed = true;
                 videoPlayer.play();
                 incrementViewCount();
+                showSocialBarAd(); // Show social bar ad after ad completes
             });
+        } else {
+            showSocialBarAd(); // Show social bar ad on subsequent plays
         }
     });
     
@@ -96,52 +106,42 @@ function setupVideoAdListeners() {
                 videoPlayer.adPlayed = true;
                 videoPlayer.play();
                 incrementViewCount();
+                showSocialBarAd(); // Show social bar ad after ad completes
             });
         }
     });
-}
-
-// Show social bar ad when video starts playing
-function showSocialBarAd() {
-    const socialBarAd = document.getElementById('social-bar-ad');
-    socialBarAd.style.display = 'block';
     
-    // Hide after 30 seconds
-    setTimeout(() => {
-        socialBarAd.style.display = 'none';
-    }, 30000);
+    // Double tap for seeking
+    videoPlayer.addEventListener('click', (e) => {
+        const currentTime = new Date().getTime();
+        const tapLength = currentTime - lastTap;
+        
+        if (tapLength < 300 && tapLength > 0) {
+            const rect = videoPlayer.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            
+            if (x > rect.width / 2) {
+                videoPlayer.currentTime += 10;
+            } else {
+                videoPlayer.currentTime = Math.max(0, videoPlayer.currentTime - 10);
+            }
+        }
+        
+        lastTap = currentTime;
+    });
 }
-
-// Update the video event listener to show social bar ad
-videoPlayer.addEventListener('play', (e) => {
-    if (!videoPlayer.adPlayed) {
-        e.preventDefault();
-        videoPlayer.pause();
-        showAdsterraAd().then(() => {
-            videoPlayer.adPlayed = true;
-            videoPlayer.play();
-            incrementViewCount();
-            showSocialBarAd(); // Show social bar ad after ad completes
-        });
-    } else {
-        showSocialBarAd(); // Show social bar ad on subsequent plays
-    }
-});
 
 // Show Adsterra ad before video playback
 function showAdsterraAd() {
     return new Promise((resolve) => {
         const adContainer = document.getElementById('ad-container');
         const videoPlayer = document.getElementById('video-player');
-        const adTimer = document.getElementById('ad-timer');
-        const skipAdBtn = document.getElementById('skip-ad-btn');
         
         // Show ad container
         adContainer.style.display = 'flex';
         videoPlayer.style.display = 'none';
         
         let timeLeft = adDuration;
-        adTimer.textContent = timeLeft;
         
         // Display ad overlay initially
         adContainer.innerHTML = `
@@ -157,17 +157,20 @@ function showAdsterraAd() {
             <div id="adsterra-video-ad" style="width:100%; height:100%;"></div>
         `;
         
+        const adTimer = document.getElementById('ad-timer');
+        const skipAdBtn = document.getElementById('skip-ad-btn');
+        
         // Load Adsterra ad
         loadAdsterraVideoAd();
         
         // Start countdown timer
         adTimerInterval = setInterval(() => {
             timeLeft--;
-            document.getElementById('ad-timer').textContent = timeLeft;
+            adTimer.textContent = timeLeft;
             
             // Show skip button after specified time
             if (timeLeft <= (adDuration - skipAdTime)) {
-                document.getElementById('skip-ad-btn').style.display = 'inline-block';
+                skipAdBtn.style.display = 'inline-block';
             }
             
             // End ad when timer reaches 0
@@ -178,7 +181,7 @@ function showAdsterraAd() {
         }, 1000);
         
         // Skip ad button event
-        document.getElementById('skip-ad-btn').addEventListener('click', () => {
+        skipAdBtn.addEventListener('click', () => {
             clearInterval(adTimerInterval);
             finishAd(resolve);
         });
@@ -208,6 +211,213 @@ function finishAd(resolve) {
     
     // Resolve promise to continue video playback
     resolve();
+}
+
+// Show social bar ad when video starts playing
+function showSocialBarAd() {
+    const socialBarAd = document.getElementById('social-bar-ad');
+    if (socialBarAd) {
+        socialBarAd.style.display = 'block';
+        
+        // Hide after 30 seconds
+        setTimeout(() => {
+            socialBarAd.style.display = 'none';
+        }, 30000);
+    }
+}
+
+// Increment view count
+function incrementViewCount() {
+    if (!currentVideo) return;
+    
+    const videoRef = database.ref(`videos/${videoId}`);
+    videoRef.transaction((video) => {
+        if (video) {
+            video.views = (video.views || 0) + 1;
+        }
+        return video;
+    });
+}
+
+// Load recommended videos
+function loadRecommendations() {
+    const videosRef = database.ref('videos');
+    videosRef.once('value').then((snapshot) => {
+        const videos = snapshot.val();
+        if (videos) {
+            // Convert to array and filter out current video
+            recommendedVideos = Object.keys(videos)
+                .map(key => ({ id: key, ...videos[key] }))
+                .filter(video => video.id !== videoId);
+            
+            // Shuffle recommendations
+            recommendedVideos = shuffleArray(recommendedVideos);
+            
+            // Display initial recommendations
+            displayRecommendations();
+        }
+    });
+}
+
+// Display recommended videos
+function displayRecommendations() {
+    const container = document.getElementById('recommendations-container');
+    container.innerHTML = '';
+    
+    const videosToShow = recommendedVideos.slice(0, displayedRecommendations);
+    
+    videosToShow.forEach(video => {
+        const videoElement = createRecommendedVideoElement(video);
+        container.appendChild(videoElement);
+    });
+    
+    // Show/hide load more button
+    const loadMoreBtn = document.getElementById('load-more-btn');
+    if (displayedRecommendations >= recommendedVideos.length) {
+        loadMoreBtn.style.display = 'none';
+    } else {
+        loadMoreBtn.style.display = 'block';
+    }
+}
+
+// Create recommended video element
+function createRecommendedVideoElement(video) {
+    const div = document.createElement('div');
+    div.className = 'recommended-video';
+    div.setAttribute('data-video-id', video.id);
+    
+    div.innerHTML = `
+        <img src="${video.thumbnail || 'assets/default-thumbnail.jpg'}" 
+             alt="${video.title}" 
+             class="recommended-thumbnail"
+             onerror="this.src='assets/default-thumbnail.jpg'">
+        <div class="recommended-info">
+            <h3>${video.title || 'Untitled Video'}</h3>
+            <p class="recommended-views">${formatViewCount(video.views || 0)} views</p>
+        </div>
+    `;
+    
+    div.addEventListener('click', () => {
+        window.location.href = `videoplayer.html?id=${video.id}`;
+    });
+    
+    return div;
+}
+
+// Load more recommendations
+function loadMoreRecommendations() {
+    displayedRecommendations += 6;
+    displayRecommendations();
+}
+
+// Setup interaction buttons
+function setupInteractionButtons() {
+    const likeBtn = document.getElementById('like-btn');
+    const shareBtn = document.getElementById('share-btn');
+    
+    likeBtn.addEventListener('click', handleLike);
+    shareBtn.addEventListener('click', handleShare);
+}
+
+// Handle like button click
+function handleLike() {
+    if (!currentVideo) return;
+    
+    const videoRef = database.ref(`videos/${videoId}`);
+    videoRef.transaction((video) => {
+        if (video) {
+            video.likes = (video.likes || 0) + 1;
+        }
+        return video;
+    }).then(() => {
+        // Update like count display
+        const likeCount = document.getElementById('like-count');
+        likeCount.textContent = parseInt(likeCount.textContent) + 1;
+        
+        // Visual feedback
+        const likeBtn = document.getElementById('like-btn');
+        likeBtn.style.backgroundColor = '#ff4444';
+        setTimeout(() => {
+            likeBtn.style.backgroundColor = '#272727';
+        }, 300);
+    });
+}
+
+// Handle share button click
+function handleShare() {
+    const modal = document.getElementById('share-modal');
+    modal.style.display = 'block';
+}
+
+// Setup modal functionality
+function setupModal() {
+    const modal = document.getElementById('share-modal');
+    const closeBtn = document.querySelector('.close');
+    const copyLinkBtn = document.getElementById('copy-link-btn');
+    
+    closeBtn.addEventListener('click', () => {
+        modal.style.display = 'none';
+    });
+    
+    window.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            modal.style.display = 'none';
+        }
+    });
+    
+    copyLinkBtn.addEventListener('click', copyShareLink);
+}
+
+// Copy share link to clipboard
+function copyShareLink() {
+    const shareLink = document.getElementById('share-link');
+    shareLink.select();
+    shareLink.setSelectionRange(0, 99999); // For mobile devices
+    
+    try {
+        navigator.clipboard.writeText(shareLink.value).then(() => {
+            const copyBtn = document.getElementById('copy-link-btn');
+            const originalText = copyBtn.textContent;
+            copyBtn.textContent = 'Copied!';
+            copyBtn.style.backgroundColor = '#00aa00';
+            
+            setTimeout(() => {
+                copyBtn.textContent = originalText;
+                copyBtn.style.backgroundColor = '#ff0000';
+            }, 2000);
+        });
+    } catch (err) {
+        // Fallback for older browsers
+        document.execCommand('copy');
+        const copyBtn = document.getElementById('copy-link-btn');
+        const originalText = copyBtn.textContent;
+        copyBtn.textContent = 'Copied!';
+        copyBtn.style.backgroundColor = '#00aa00';
+        
+        setTimeout(() => {
+            copyBtn.textContent = originalText;
+            copyBtn.style.backgroundColor = '#ff0000';
+        }, 2000);
+    }
+}
+
+// Utility functions
+function shuffleArray(array) {
+    const newArray = [...array];
+    for (let i = newArray.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+    }
+    return newArray;
+}
+
+function formatViewCount(views) {
+    if (views >= 1000000) {
+        return (views / 1000000).toFixed(1) + 'M';
+    } else if (views >= 1000) {
+        return (views / 1000).toFixed(1) + 'K';
+    }
+    return views.toString();
 }
 
 // Alternative simple ad implementation (fallback)
@@ -256,33 +466,36 @@ function showSimpleAd() {
     });
 }
 
-// The rest of your existing JavaScript code remains the same...
-// [Keep all your existing functions like loadRecommendations, displayRecommendations, etc.]
-
-// Update the video click event listener to handle ads
-document.getElementById('video-player').addEventListener('click', (e) => {
-    const videoPlayer = document.getElementById('video-player');
-    
-    // Double tap detection for seeking
-    const currentTime = new Date().getTime();
-    const tapLength = currentTime - lastTap;
-    
-    if (tapLength < 300 && tapLength > 0) {
-        const rect = videoPlayer.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        
-        if (x > rect.width / 2) {
-            videoPlayer.currentTime += 10;
-        } else {
-            videoPlayer.currentTime = Math.max(0, videoPlayer.currentTime - 10);
-        }
-    }
-    
-    lastTap = currentTime;
-});
-
-// Initialize ads on page load
+// Initialize everything when DOM is loaded
 document.addEventListener('DOMContentLoaded', function() {
+    // Initialize ads
     initializeAds();
+    
+    // Load video data
     loadVideo();
+    
+    // Set up load more button
+    const loadMoreBtn = document.getElementById('load-more-btn');
+    loadMoreBtn.addEventListener('click', loadMoreRecommendations);
+    
+    // Set up search functionality
+    const searchBtn = document.getElementById('search-btn');
+    const searchInput = document.getElementById('search-input');
+    
+    searchBtn.addEventListener('click', handleSearch);
+    searchInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            handleSearch();
+        }
+    });
 });
+
+// Handle search functionality
+function handleSearch() {
+    const searchInput = document.getElementById('search-input');
+    const query = searchInput.value.trim();
+    
+    if (query) {
+        window.location.href = `index.html?search=${encodeURIComponent(query)}`;
+    }
+                       }
