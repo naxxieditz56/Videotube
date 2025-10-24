@@ -466,3 +466,55 @@ header {
     font-size: 16px;
     margin-bottom: 20px;
 }
+/* Ad Container Styles */
+.banner-ad-container {
+    margin: 15px 0;
+    display: flex;
+    justify-content: center;
+}
+
+#banner-ad-300x50 {
+    width: 100%;
+    max-width: 320px;
+    margin: 15px auto;
+}
+
+#banner-ad-300x250 {
+    width: 100%;
+    max-width: 300px;
+    margin: 0 auto 15px auto;
+}
+
+.native-banner-ad {
+    margin: 15px 0;
+    display: flex;
+    justify-content: center;
+}
+
+.smartlink-ad-container {
+    margin: 15px 0;
+    padding: 10px;
+    background: #272727;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.smartlink-ad {
+    color: #ff0000;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 14px;
+}
+
+.smartlink-ad:hover {
+    text-decoration: underline;
+}
+
+/* Social Bar Ad */
+#social-bar-ad {
+    margin-top: 10px;
+    padding: 10px;
+    background: #272727;
+    border-radius: 8px;
+    text-align: center;
+}
