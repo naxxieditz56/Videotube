@@ -1,4 +1,5 @@
-
+[file name]: videoplayer.css
+[file content begin]
 * {
     margin: 0;
     padding: 0;
@@ -80,7 +81,19 @@ header {
     background: #404040;
 }
 
+.user-actions .admin-link {
+    padding: 8px 16px;
+    background-color: #ff0000;
+    color: white;
+    text-decoration: none;
+    border-radius: 4px;
+    font-weight: 500;
+    transition: background-color 0.2s;
+}
 
+.user-actions .admin-link:hover {
+    background-color: #cc0000;
+}
 
 .player-container {
     display: flex;
@@ -386,3 +399,4 @@ header {
         max-width: 2400px;
     }
 }
+[file content end]
