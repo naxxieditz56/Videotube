@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VideoTube - Player</title>
+    <title>Hub Master - Player</title>
     <link rel="stylesheet" href="css/videoplayer.css">
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
@@ -13,14 +13,11 @@
     <header>
         <div class="header-container">
             <div class="logo">
-                <a href="index.html"><h1>VideoTube</h1></a>
+                <a href="index.html"><h1>Hub Master</h1></a>
             </div>
             <div class="search-bar">
                 <input type="text" id="search-input" placeholder="Search...">
                 <button id="search-btn">Search</button>
-            </div>
-            <div class="user-actions">
-                <a href="admin.html" class="admin-link">Admin</a>
             </div>
         </div>
     </header>
@@ -35,10 +32,7 @@
                     <video id="video-player" controls>
                         Your browser does not support the video tag.
                     </video>
-                    <div class="video-controls">
-                        <button id="play-btn" class="control-btn">Play</button>
-                        <button id="fullscreen-btn" class="control-btn">Fullscreen</button>
-                    </div>
+                    
                 </div>
                 
                 <div class="video-info-section">
