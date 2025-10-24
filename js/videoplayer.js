@@ -101,6 +101,33 @@ function setupVideoAdListeners() {
     });
 }
 
+// Show social bar ad when video starts playing
+function showSocialBarAd() {
+    const socialBarAd = document.getElementById('social-bar-ad');
+    socialBarAd.style.display = 'block';
+    
+    // Hide after 30 seconds
+    setTimeout(() => {
+        socialBarAd.style.display = 'none';
+    }, 30000);
+}
+
+// Update the video event listener to show social bar ad
+videoPlayer.addEventListener('play', (e) => {
+    if (!videoPlayer.adPlayed) {
+        e.preventDefault();
+        videoPlayer.pause();
+        showAdsterraAd().then(() => {
+            videoPlayer.adPlayed = true;
+            videoPlayer.play();
+            incrementViewCount();
+            showSocialBarAd(); // Show social bar ad after ad completes
+        });
+    } else {
+        showSocialBarAd(); // Show social bar ad on subsequent plays
+    }
+});
+
 // Show Adsterra ad before video playback
 function showAdsterraAd() {
     return new Promise((resolve) => {
