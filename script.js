@@ -21,14 +21,14 @@ const urlParams = new URLSearchParams(window.location.search);
 const videoId = urlParams.get('v');
 
 if (videoId) {
-    // === USER MODE ===
+    // === USER MODE (Watching Video) ===
     document.getElementById('login-container').classList.add('hidden');
     document.getElementById('ad-flow-container').classList.remove('hidden');
     
     // Inject GLOBAL ADS (Popunder & Social Bar) ONLY for users
     injectGlobalAds();
 } else {
-    // === ADMIN MODE ===
+    // === ADMIN MODE (Uploading Video) ===
     auth.onAuthStateChanged((user) => {
         if (user) {
             showDashboard();
@@ -138,33 +138,38 @@ function copyLink(link) {
     alert("Link Copied!");
 }
 
-// --- PLAYER & TIMER LOGIC ---
+// --- TIMER & STEP LOGIC ---
 
-function startTimer() {
-    // Hide the initial button
-    document.getElementById('btn-step-1').style.display = 'none';
-    // Show timer box
-    document.getElementById('timer-box').classList.remove('hidden');
+function startGlobalTimer(stepIndex) {
+    // 1. Hide the "Start" button for this step
+    document.getElementById(`btn-start-${stepIndex}`).style.display = 'none';
+    
+    // 2. Show the Timer Box for this step
+    document.getElementById(`timer-box-${stepIndex}`).classList.remove('hidden');
 
+    // 3. Start Countdown
     let timeLeft = 15;
-    const countdownEl = document.getElementById('countdown');
+    const countdownEl = document.getElementById(`time-${stepIndex}`);
     
     const timerId = setInterval(() => {
         timeLeft--;
         countdownEl.innerText = timeLeft;
+        
         if (timeLeft <= 0) {
             clearInterval(timerId);
-            // Hide timer box
-            document.getElementById('timer-box').classList.add('hidden');
-            // Show "Next Step" button
-            document.getElementById('btn-after-timer').classList.remove('hidden');
+            // 4. Hide Timer Box
+            document.getElementById(`timer-box-${stepIndex}`).classList.add('hidden');
+            // 5. Show "Next" Button
+            document.getElementById(`btn-next-${stepIndex}`).classList.remove('hidden');
         }
     }, 1000);
 }
 
-function nextStep(stepNumber) {
+function goToStep(stepNumber) {
+    // Hide all steps
     document.querySelectorAll('.ad-step').forEach(el => el.classList.add('hidden'));
-    document.getElementById('step-' + stepNumber).classList.remove('hidden');
+    // Show new step
+    document.getElementById(`step-${stepNumber}`).classList.remove('hidden');
 }
 
 function showPlayer() {
@@ -183,5 +188,5 @@ function showPlayer() {
             window.location.href = window.location.pathname;
         }
     });
-            }
-              
+        }
+                                                
