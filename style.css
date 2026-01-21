@@ -75,16 +75,32 @@ button {
     padding: 15px;
 }
 
+/* AD & TIMER STYLING */
 .ad-box {
-    margin: 20px 0;
-    background: #eee;
+    margin: 15px 0;
+    background: #f1f2f6;
     padding: 10px;
     border-radius: 8px;
     overflow: hidden;
-    min-height: 100px;
+    min-height: 50px;
     display: flex;
     justify-content: center;
     align-items: center;
+}
+
+.timer-box {
+    margin-top: 20px;
+    padding: 15px;
+    background-color: #fff3cd;
+    border: 1px solid #ffeeba;
+    border-radius: 8px;
+    color: #856404;
+}
+
+.countdown-text {
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #d63031;
 }
 
 /* Video List Styling in Admin */
@@ -113,5 +129,3 @@ video {
     border-radius: 8px;
     box-shadow: 0 5px 15px rgba(0,0,0,0.2);
 }
-
-.note { font-size: 0.8rem; color: #777; margin-top: 10px; }
