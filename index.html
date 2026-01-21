@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hub Master</title>
+    <title>Hub Master - Secure Video Storage</title>
     
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -54,19 +54,48 @@
                 <script type="text/javascript" src="https://avouchlawsrethink.com/8b50588544bfa320797976a2051bfa82/invoke.js"></script>
             </div>
 
-            <button id="btn-step-1" class="btn-next" onclick="startTimer()">Click to Continue <i class="fa-solid fa-arrow-right"></i></button>
+            <button id="btn-start-1" class="btn-next" onclick="startGlobalTimer(1)">Click to Continue <i class="fa-solid fa-arrow-right"></i></button>
             
-            <div id="timer-box" class="hidden" style="margin-top: 20px;">
-                <p>Please wait <span id="countdown" style="color:red; font-weight:bold; font-size:1.2rem;">15</span> seconds...</p>
+            <div id="timer-box-1" class="timer-box hidden">
+                <p>Please wait <span id="time-1" class="countdown-text">15</span> seconds...</p>
                 <script async="async" data-cfasync="false" src="https://avouchlawsrethink.com/c53d28cbe54123743f060b3be17eb371/invoke.js"></script>
                 <div id="container-c53d28cbe54123743f060b3be17eb371"></div>
             </div>
 
-            <button id="btn-after-timer" class="btn-next hidden" onclick="nextStep(2)">Next Step <i class="fa-solid fa-check"></i></button>
+            <button id="btn-next-1" class="btn-next hidden" onclick="goToStep(2)">Next Step <i class="fa-solid fa-check"></i></button>
         </div>
 
         <div id="step-2" class="ad-step hidden">
-            <h3>Step 2/3: Final Verification</h3>
+            <h3>Step 2/3: Verifying Link</h3>
+            
+            <div class="ad-box">
+                <script async="async" data-cfasync="false" src="https://avouchlawsrethink.com/c53d28cbe54123743f060b3be17eb371/invoke.js"></script>
+                <div id="container-c53d28cbe54123743f060b3be17eb371"></div>
+            </div>
+
+            <div class="ad-box">
+                <script type="text/javascript">
+                    atOptions = { 'key' : '13999a7c7629327fead18fa7885981ea', 'format' : 'iframe', 'height' : 250, 'width' : 300, 'params' : {} };
+                </script>
+                <script type="text/javascript" src="https://avouchlawsrethink.com/13999a7c7629327fead18fa7885981ea/invoke.js"></script>
+            </div>
+
+            <button id="btn-start-2" class="btn-next" onclick="startGlobalTimer(2)">Verify Link <i class="fa-solid fa-arrow-right"></i></button>
+
+            <div id="timer-box-2" class="timer-box hidden">
+                <p>Verifying... <span id="time-2" class="countdown-text">15</span> seconds left</p>
+                <script type="text/javascript">
+                    atOptions = { 'key' : '8b50588544bfa320797976a2051bfa82', 'format' : 'iframe', 'height' : 50, 'width' : 320, 'params' : {} };
+                </script>
+                <script type="text/javascript" src="https://avouchlawsrethink.com/8b50588544bfa320797976a2051bfa82/invoke.js"></script>
+            </div>
+
+            <button id="btn-next-2" class="btn-next hidden" onclick="goToStep(3)">Continue <i class="fa-solid fa-check"></i></button>
+        </div>
+
+        <div id="step-3" class="ad-step hidden">
+            <h3>Step 3/3: Finalizing</h3>
+            <p>Your video is ready.</p>
             
             <div class="ad-box">
                 <script type="text/javascript">
@@ -75,20 +104,15 @@
                 <script type="text/javascript" src="https://avouchlawsrethink.com/13999a7c7629327fead18fa7885981ea/invoke.js"></script>
             </div>
 
-            <button class="btn-next" onclick="nextStep(3)">Verify Link <i class="fa-solid fa-arrow-right"></i></button>
-        </div>
+            <button id="btn-start-3" class="btn-primary" onclick="startGlobalTimer(3)">Watch Video Now <i class="fa-solid fa-play"></i></button>
 
-        <div id="step-3" class="ad-step hidden">
-            <h3>Step 3/3: Video Ready</h3>
-            
-            <div class="ad-box">
-                <script type="text/javascript">
-                    atOptions = { 'key' : '8b50588544bfa320797976a2051bfa82', 'format' : 'iframe', 'height' : 50, 'width' : 320, 'params' : {} };
-                </script>
-                <script type="text/javascript" src="https://avouchlawsrethink.com/8b50588544bfa320797976a2051bfa82/invoke.js"></script>
+            <div id="timer-box-3" class="timer-box hidden">
+                <p>Loading Player... <span id="time-3" class="countdown-text">15</span> seconds</p>
+                 <script async="async" data-cfasync="false" src="https://avouchlawsrethink.com/c53d28cbe54123743f060b3be17eb371/invoke.js"></script>
+                 <div id="container-c53d28cbe54123743f060b3be17eb371"></div>
             </div>
 
-            <button class="btn-primary" onclick="showPlayer()">Watch Video Now <i class="fa-solid fa-play"></i></button>
+            <button id="btn-next-3" class="btn-primary hidden" onclick="showPlayer()">Play Video <i class="fa-solid fa-play"></i></button>
         </div>
 
     </div>
